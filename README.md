@@ -34,25 +34,28 @@ TBC:
          → bulk CSV import of LinkedIn URLs → personal emails
 ```
 
-**Wave status (Jun 2026):**
+**Wave status (Aug 2026):**
 
 | Wave | Companies | Profiles | Status |
 |---|---|---|---|
 | Wave 1 (`target_companies_wave1.csv`) | 23/28 exported (5 missing — URL slug mismatch) | 2,187 ranked | ✅ Done — in Airtable |
-| Wave 2 (`target_companies_wave2.csv`) | 45/45 ✅ | 2,199 scraped → 2,187 ranked | ✅ Ranked + in Airtable Jun 18. Profile Scraper enriching 9,084 profiles (200/day, ETA ~Aug 1) |
-| Wave 3 (`target_companies_wave3.csv`) | 28/28 ✅ (done Jun 19) | — | Filter + enrich queued — starts after wave 2 enricher (~Aug 1) |
-| Wave 4 (`target_companies_wave4.csv`) | 6 GTM-focused (Gong, Modjo, Ringover, Livestorm, Pennylane, Agicap) | — | Employees Export launched Jun 24 |
+| Wave 2 (`target_companies_wave2.csv`) | 45/45 ✅ | 7,452 of 9,084 targeted scraped, ranked + in Airtable | ⏸ Paused 2026-07-27 mid-queue (~1,631 never scraped) to prioritize Wave 4 — resume via `wave/wave2_pause_state.json` |
+| Wave 3 (`target_companies_wave3.csv`) | 28/28 ✅ (done Jun 19) | — | Filter + enrich queued — waiting on Wave 2/4 |
+| Wave 4 (`target_companies_wave4.csv`) | 6 GTM-focused (Gong, Modjo, Ringover, Livestorm, Pennylane, Agicap) | 1,286 newly ranked + pushed 2026-08-27 (54 pushed earlier) | ▶ Actively scraping (~80/day, shared LinkedIn account cap) |
 
-**Non-LinkedIn enrichment (Twitter/X · GitHub) — running in parallel:**
+⚠️ `pb_daily_dashboard.py`'s "Wave 2" progress line reads the Profile Scraper phantom's persistent S3 store, which keeps accumulating whatever wave that phantom is *currently* pointed at — since Jul 27 that's Wave 4. Don't trust that line's label; check which spreadsheet the phantom is actually pointed at first.
 
-Filtered to ranks 1–7 only (technical profiles: AI/ML, Eng, Product, Design) — 1,146 profiles out of 2,188 total. Sales, CS, HR, Finance excluded (no GitHub/Twitter signal).
+**Non-LinkedIn enrichment (Twitter/X · GitHub):**
 
-| Phantom | Input | Rate | ETA |
-|---|---|---|---|
-| Twitter/X URL Finder  
-| Twitter/X Profile Scraper URL Finder output | manual | After URL Finder builds list |
-| GitHub User Search Export 
-| GitHub Profile Scraper Search output | manual | After Search Export |
+Targets ranks 1–7 only (technical profiles: AI/ML, Eng, Product, Design) — ~1,146 profiles. Sales, CS, HR, Finance excluded (no GitHub/Twitter signal). Link-only enrichment (no profile scraping) — just finds the handle/username and writes it onto the matching Airtable row.
+
+| Phantom | Status |
+|---|---|
+| Twitter/X URL Finder | ✅ 1,157 handles found |
+| Twitter/X Profile Scraper | Only 120/1,157 profiles scraped — not needed for link-only enrichment |
+| GitHub User Search | 413/1,146 usernames found (36%), still running daily |
+| GitHub Profile Scraper | Never launched — not needed for link-only enrichment |
+| `enrichment_update_airtable.py` | Writes `twitterUrl`/`githubUrl` onto existing Airtable rows by name match. As of 2026-08-27: 673 Twitter + 12 GitHub written (218 Twitter / 6 GitHub handles found had no matching Airtable row). GitHub's `query` column is a search URL, not a plain name — the matcher parses the `q=` param back out before matching. |
 
 ---
 
@@ -257,6 +260,7 @@ phantombuster-api/
 ├── rank_profiles.py                  # LinkedIn profile classifier (Claude Batch API)
 ├── filter_and_prepare_enricher.py    # Filter FR/ES/PT → prep enricher input
 ├── push_to_airtable.py               # Push ranked CSV → Airtable (country, connectionDegree, autoconnect_sent)
+├── enrichment_update_airtable.py     # Write Twitter/GitHub URLs onto existing Airtable rows by name match
 ├── build_autoconnect_segment.py      # Build Auto Connect CSV (FR, 2nd degree, target ranks, dedup via Airtable)
 ├── target_companies_wave1.csv        # Wave 1 companies (28, done)
 ├── target_companies_wave2.csv        # Wave 2 companies (45, enricher running)

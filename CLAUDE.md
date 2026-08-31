@@ -101,13 +101,19 @@ Both contain the same key — never hard-code it.
    → NOT a PhantomBuster phantom — run on final candidates, not all profiles
 ```
 
-## Wave status (June 2026)
+## Wave status (as of 2026-07-27)
 
 | Wave | Companies | Profiles | Status |
 |---|---|---|---|
 | Wave 1 | 28 (sales automation, FR/ES/PT) | 2,187 ranked | Done — in Airtable |
-| Wave 2 | 45 (broader B2B SaaS) | 18,700 exported, 9,084 FR/ES/PT | Enricher running, done ~Jul 31 2026 |
+| Wave 2 | 45 (broader B2B SaaS) | 18,700 exported, 9,084 FR/ES/PT | **Paused 2026-07-27** to run Wave 4 — see `wave/notes.md` to resume |
 | Wave 3 | 29 (Bordeaux tech + AI) | — | Employees Export started Jun 16 |
+| Wave 4 | 6 (Gong, Modjo, Ringover, Livestorm, Pennylane, Agicap) | 24,227 exported (cumulative store), 1,499 FR/ES/PT unique to these 6 | Enricher running 2026-07-27, ~8 days |
+
+Note: the Employees Export phantom's result store is cumulative/shared across
+all waves ("mix" file management) — always filter its raw output down to the
+current wave's company URLs before feeding the Profile Scraper. See
+`wave/notes.md` for details.
 
 ## ⚠️ DO NOT RUN
 **LinkedIn Auto Connect** — uses connection quota and was crash-looping (3-second runs).

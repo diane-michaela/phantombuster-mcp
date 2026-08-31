@@ -28,6 +28,7 @@ import csv
 import httpx
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -65,6 +66,8 @@ BATCH_ID_FILE  = Path(__file__).parent / ".last_batch_id"
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = """You are a lead classification assistant. Given a LinkedIn job title and headline, classify the profile into TWO fields and respond ONLY with a JSON object — no explanation, no markdown.
+
+Classify strictly on the job title/headline text provided. Never infer or use health, religion, ethnicity, sexual orientation, political affiliation, age, or other protected/sensitive personal attributes, even if a name or headline seems to suggest one.
 
 ---
 
@@ -147,12 +150,24 @@ def make_user_message(row: dict) -> str:
 
 
 def profile_url(row: dict) -> str:
-    """Return a stable dedup key for a profile row."""
-    return (
+    """Return a normalized, stable dedup key for a profile row.
+
+    Different PhantomBuster runs populate different URL columns in different
+    formats (with/without www., URL-encoded accents, trailing slash), so raw
+    string comparison silently fails to dedup the same person across runs.
+    """
+    import urllib.parse
+
+    raw = (
         row.get("profileUrl_from_input") or
         row.get("profileUrl") or
         row.get("linkedinProfileUrl") or ""
     ).strip()
+    if not raw:
+        return ""
+    url = urllib.parse.unquote(raw).lower().strip()
+    url = re.sub(r"^https?://(www\.)?linkedin\.com/in/", "", url)
+    return url.rstrip("/")
 
 
 # ---------------------------------------------------------------------------
